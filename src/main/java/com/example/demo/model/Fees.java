@@ -1,36 +1,43 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
+@Table(name = "fees")
 public class Fees {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "fee_id")
+    private Long feeId;
 
-    private double amount;
+    private Double amount;
 
     private String status;
 
-    private LocalDateTime paidDate;
+    @Column(name = "paid_date")
+    private LocalDate paidDate;
 
     @ManyToOne
-    @JoinColumn(name = "resident_id")
+    @JoinColumn(name = "resident_id") // ✅ THIS MUST MATCH DB
     private Resident resident;
 
-    // GETTERS & SETTERS
+    // ===== GETTERS & SETTERS =====
 
-    public Long getId() {
-        return id;
+    public Long getFeeId() {
+        return feeId;
     }
 
-    public double getAmount() {
+    public void setFeeId(Long feeId) {
+        this.feeId = feeId;
+    }
+
+    public Double getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(Double amount) {
         this.amount = amount;
     }
 
@@ -42,11 +49,11 @@ public class Fees {
         this.status = status;
     }
 
-    public LocalDateTime getPaidDate() {
+    public LocalDate getPaidDate() {
         return paidDate;
     }
 
-    public void setPaidDate(LocalDateTime paidDate) {
+    public void setPaidDate(LocalDate paidDate) {
         this.paidDate = paidDate;
     }
 

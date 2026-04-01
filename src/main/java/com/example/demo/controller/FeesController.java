@@ -18,16 +18,19 @@ public class FeesController {
         this.feesService = feesService;
     }
 
-    @PostMapping("/add")
+    // ✅ ADD FEE
+    @PostMapping
     public Fees addFee(@RequestBody FeesRequest request) {
         return feesService.addFee(request);
     }
 
-    @GetMapping("/all")
+    // ✅ GET ALL FEES
+    @GetMapping
     public List<Fees> getAllFees() {
         return feesService.getAllFees();
     }
 
+    // 🔥 ADD THIS (VERY IMPORTANT)
     @PutMapping("/pay/{id}")
     public Fees payFee(@PathVariable Long id) {
         return feesService.payFee(id);

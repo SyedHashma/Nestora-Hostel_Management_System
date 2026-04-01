@@ -12,19 +12,10 @@ public class Room {
     private String roomNumber;
     private int capacity;
 
-    // 🔥 ADD THIS (IMPORTANT)
-    @ManyToOne
-    @JoinColumn(name = "hostel_id")
-    private Hostel hostel;
-
-    // ===== GETTERS & SETTERS =====
+    // GETTERS & SETTERS
 
     public Long getRoomId() {
         return roomId;
-    }
-
-    public void setRoomId(Long roomId) {
-        this.roomId = roomId;
     }
 
     public String getRoomNumber() {
@@ -41,13 +32,5 @@ public class Room {
 
     public void setCapacity(int capacity) {
         this.capacity = capacity;
-    }
-
-    public Hostel getHostel() {
-        return hostel;
-    }
-
-    public void setHostel(Hostel hostel) {
-        this.hostel = hostel;
     }
 }

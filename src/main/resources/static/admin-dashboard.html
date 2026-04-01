@@ -1,158 +1,90 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>NESTORA Admin</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-body { display:flex; margin:0; font-family:Segoe UI; }
-
-.sidebar {
-    width:230px;
-    height:100vh;
-    background:#1f2d3d;
-    color:white;
-    padding:20px;
-}
-.sidebar h2 { text-align:center; }
-.sidebar button {
-    width:100%;
-    padding:10px;
-    background:none;
-    border:none;
-    color:white;
-    cursor:pointer;
-}
-.sidebar button:hover { background:#3c8dbc; }
-
-.main { flex:1; padding:20px; background:#f4f6f9; }
-
-.card {
-    display:inline-block;
-    padding:20px;
-    margin:10px;
-    border-radius:10px;
-    color:white;
-}
-.blue { background:#007bff; }
-
-table {
-    width:100%;
-    background:white;
-    border-collapse:collapse;
-    margin-top:20px;
-}
-th,td { padding:10px; }
-th { background:black; color:white; }
-
-input {
-    padding:10px;
-    width:250px;
-}
-</style>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
 
-<div class="sidebar">
-<h2>NESTORA</h2>
-<button onclick="loadResidents()">Residents</button>
-<button onclick="loadFees()">Fees</button>
-<button onclick="loadComplaints()">Complaints</button>
-<button onclick="logout()">Logout</button>
-</div>
+<div class="navbar">Admin Dashboard</div>
 
-<div class="main">
+<div class="container">
 
-<h2>Admin Dashboard</h2>
+    <button onclick="logout()">Logout</button>
 
-<input id="search" placeholder="Search..." onkeyup="searchResident()">
+    <h2>Total Fees</h2>
+    <h3 id="totalFees">0</h3>
 
-<div class="card blue">Total Residents: <span id="count"></span></div>
+    <h2>Fees Data</h2>
 
-<canvas id="chart" style="max-width:400px;"></canvas>
+    <table border="1" width="100%">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Amount</th>
+                <th>Status</th>
+            </tr>
+        </thead>
 
-<table>
-<thead>
-<tr><th>Name</th><th>Email</th><th>Phone</th></tr>
-</thead>
-<tbody></tbody>
-</table>
+        <tbody id="feesTable"></tbody>
+    </table>
 
 </div>
 
 <script>
 
-function logout(){
- localStorage.clear();
- window.location="login.html";
+const token = localStorage.getItem("token");
+
+// 🔐 ROLE CHECK
+const role = localStorage.getItem("role");
+if (role !== "ADMIN") {
+    alert("Access Denied");
+    window.location.href = "/login.html";
 }
 
-function loadResidents(){
- fetch("http://localhost:8081/resident/all")
- .then(r=>r.json())
- .then(data=>{
-    let tbody=document.querySelector("tbody");
-    tbody.innerHTML="";
-    count.innerText=data.length;
+// 🚀 LOAD FEES
+async function loadFees() {
 
-    data.forEach(r=>{
-        tbody.innerHTML+=`<tr>
-        <td>${r.name}</td>
-        <td>${r.email}</td>
-        <td>${r.phone}</td>
-        </tr>`;
-    });
-
-    new Chart(chart,{
-        type:'bar',
-        data:{
-            labels:["Residents"],
-            datasets:[{data:[data.length]}]
+    const response = await fetch("http://localhost:9081/fees", {
+        method: "GET",
+        headers: {
+            "Authorization": "Bearer " + token
         }
     });
 
- });
-}
+    const data = await response.json();
 
-function searchResident(){
- let val=search.value.toLowerCase();
- document.querySelectorAll("tbody tr").forEach(r=>{
-    r.style.display = r.innerText.toLowerCase().includes(val) ? "" : "none";
- });
-}
+    let total = 0;
+    let html = "";
 
-function loadFees(){
- fetch("http://localhost:8081/fees/all")
- .then(r=>r.json())
- .then(data=>{
-    let html="<h3>Fees</h3><table><tr><th>Amount</th><th>Status</th></tr>";
-    data.forEach(f=>{
-        html+=`<tr>
-        <td>${f.amount}</td>
-        <td>${f.status}</td>
-        </tr>`;
+    data.forEach(fee => {
+
+        total += fee.amount;
+
+        html += `
+            <tr>
+                <td>${fee.feeId}</td>
+                <td>${fee.amount}</td>
+                <td style="color:${fee.status === 'PAID' ? 'green' : 'red'}">
+                    ${fee.status}
+                </td>
+            </tr>
+        `;
     });
-    html+="</table>";
-    document.querySelector(".main").innerHTML=html;
- });
+
+    document.getElementById("feesTable").innerHTML = html;
+    document.getElementById("totalFees").innerText = total;
 }
 
-function loadComplaints(){
- fetch("http://localhost:8081/complaint/all")
- .then(r=>r.json())
- .then(data=>{
-    let html="<h3>Complaints</h3><table><tr><th>Description</th></tr>";
-    data.forEach(c=>{
-        html+=`<tr><td>${c.description}</td></tr>`;
-    });
-    html+="</table>";
-    document.querySelector(".main").innerHTML=html;
- });
+// 🚪 LOGOUT
+function logout() {
+    localStorage.clear();
+    window.location.href = "/login.html";
 }
 
-loadResidents();
+// 🔥 INIT
+loadFees();
 
 </script>
 

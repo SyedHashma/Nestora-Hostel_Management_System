@@ -1,30 +1,74 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.User;
+import com.example.demo.repository.UserRepository;
+import com.example.demo.security.JwtUtil;
 import com.example.demo.service.AuthService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin
 public class AuthController {
 
-    private final AuthService authService;
+    @Autowired
+    private UserRepository userRepository;
 
-    public AuthController(AuthService authService) {
-        this.authService = authService;
-    }
+    @Autowired
+    private AuthService authService;
 
-    // 🔹 SIGNUP
+    // ✅ SIGNUP
     @PostMapping("/signup")
     public User signup(@RequestBody User user) {
-        return authService.signup(user);
+
+        // 🔥 Default role
+        if (user.getRole() == null) {
+            user.setRole("USER");
+        }
+
+        return userRepository.save(user);
     }
 
-    // 🔹 LOGIN
+    // ✅ LOGIN (JWT + ROLE)
     @PostMapping("/login")
-    public User login(@RequestBody User user) {
-        return authService.login(user.getEmail(), user.getPassword());
+    public Object login(@RequestBody User user) {
+
+        // 🔐 Validate user
+        User existing = authService.login(user.getUsername(), user.getPassword());
+
+        // 🔐 Generate JWT token
+        String token = JwtUtil.generateToken(existing.getUsername());
+
+        // 🔥 Return token + role
+        return Map.of(
+                "token", token,
+                "role", existing.getRole()
+        );
     }
 
+    // ✅ FORGOT PASSWORD
+    @PostMapping("/forgot-password")
+    public String resetPassword(@RequestBody User user) {
+
+        User existing = userRepository.findByUsername(user.getUsername());
+
+        if (existing == null) {
+            return "User not found";
+        }
+
+        existing.setPassword(user.getPassword());
+        userRepository.save(existing);
+
+        return "Password updated successfully";
+    }
+
+    // ✅ GET ALL USERS (ADMIN USE)
+    @GetMapping("/all")
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
 }

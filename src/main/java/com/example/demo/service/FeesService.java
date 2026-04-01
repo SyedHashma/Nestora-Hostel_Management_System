@@ -7,7 +7,7 @@ import com.example.demo.repository.FeesRepository;
 import com.example.demo.repository.ResidentRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -21,6 +21,7 @@ public class FeesService {
         this.residentRepository = residentRepository;
     }
 
+    // ✅ ADD FEE
     public Fees addFee(FeesRequest request) {
 
         Resident resident = residentRepository.findById(request.getResidentId())
@@ -31,19 +32,30 @@ public class FeesService {
         fee.setResident(resident);
         fee.setStatus("PENDING");
 
+        // 🔥 OPTIONAL (GOOD PRACTICE)
+        fee.setPaidDate(null);
+
         return feesRepository.save(fee);
     }
 
+    // ✅ GET ALL FEES
     public List<Fees> getAllFees() {
         return feesRepository.findAll();
     }
 
+    // ✅ PAY FEE
     public Fees payFee(Long id) {
+
         Fees fee = feesRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Fee not found"));
 
+        // 🔥 VALIDATION (IMPORTANT FOR VIVA)
+        if ("PAID".equalsIgnoreCase(fee.getStatus())) {
+            throw new RuntimeException("Fee already paid");
+        }
+
         fee.setStatus("PAID");
-        fee.setPaidDate(LocalDateTime.now());
+        fee.setPaidDate(LocalDate.now()); // ✅ FIXED
 
         return feesRepository.save(fee);
     }

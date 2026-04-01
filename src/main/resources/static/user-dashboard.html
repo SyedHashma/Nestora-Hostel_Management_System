@@ -1,61 +1,108 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>User Dashboard</title>
-
-<style>
-body {
-    font-family:Segoe UI;
-    background:#f4f6f9;
-    padding:20px;
-}
-.card {
-    background:white;
-    padding:20px;
-    border-radius:10px;
-    margin-bottom:20px;
-}
-</style>
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
 
-<h2>User Dashboard</h2>
+<div class="navbar">User Dashboard</div>
 
-<div class="card">
-<h3>Your Fees</h3>
-<ul id="fees"></ul>
-</div>
+<div class="container">
 
-<div class="card">
-<h3>Your Complaints</h3>
-<ul id="complaints"></ul>
+    <button onclick="logout()">Logout</button>
+
+    <h2>Your Fees</h2>
+
+    <table border="1" width="100%">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody id="feesTable"></tbody>
+    </table>
+
 </div>
 
 <script>
 
-let userId = localStorage.getItem("userId");
+const token = localStorage.getItem("token");
 
-fetch("http://localhost:8081/fees/all")
-.then(r=>r.json())
-.then(data=>{
-    data.forEach(f=>{
-        if(f.resident && f.resident.id == userId){
-            fees.innerHTML += `<li style="color:${f.status=='PAID'?'green':'red'}">
-            ${f.amount} - ${f.status}</li>`;
+// 🔐 ROLE CHECK
+const role = localStorage.getItem("role");
+if (role !== "USER") {
+    alert("Access Denied");
+    window.location.href = "/login.html";
+}
+
+// 🚀 LOAD FEES
+async function loadFees() {
+
+    const response = await fetch("http://localhost:9081/fees", {
+        headers: {
+            "Authorization": "Bearer " + token
         }
     });
-});
 
-fetch("http://localhost:8081/complaint/all")
-.then(r=>r.json())
-.then(data=>{
-    data.forEach(c=>{
-        if(c.resident && c.resident.id == userId){
-            complaints.innerHTML += `<li>${c.description}</li>`;
+    const data = await response.json();
+
+    let html = "";
+
+    data.forEach(fee => {
+
+        html += `
+            <tr>
+                <td>${fee.feeId}</td>
+                <td>${fee.amount}</td>
+                <td style="color:${fee.status === 'PAID' ? 'green' : 'red'}">
+                    ${fee.status}
+                </td>
+                <td>
+                    ${
+                        fee.status === 'PENDING'
+                        ? `<button onclick="payFee(${fee.feeId})">Pay</button>`
+                        : '✔'
+                    }
+                </td>
+            </tr>
+        `;
+    });
+
+    document.getElementById("feesTable").innerHTML = html;
+}
+
+// 💳 PAY FEE
+async function payFee(id) {
+
+    const response = await fetch(`http://localhost:9081/fees/pay/${id}`, {
+        method: "PUT",
+        headers: {
+            "Authorization": "Bearer " + token
         }
     });
-});
+
+    if (response.status === 200) {
+        alert("Payment Successful ✅");
+        loadFees();
+    } else {
+        alert("Payment Failed ❌");
+    }
+}
+
+// 🚪 LOGOUT
+function logout() {
+    localStorage.clear();
+    window.location.href = "/login.html";
+}
+
+// 🔥 INIT
+loadFees();
 
 </script>
 

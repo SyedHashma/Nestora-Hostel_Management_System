@@ -1,44 +1,41 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.Resident;
-import com.example.demo.service.ResidentService;
+import com.example.demo.model.Room;
+import com.example.demo.repository.ResidentRepository;
+import com.example.demo.repository.RoomRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/resident")
-@CrossOrigin // 🔥 IMPORTANT for frontend later
+@RequestMapping("/residents")
+@CrossOrigin
 public class ResidentController {
 
-    private final ResidentService residentService;
+    @Autowired
+    private ResidentRepository residentRepository;
 
-    public ResidentController(ResidentService residentService) {
-        this.residentService = residentService;
-    }
+    @Autowired
+    private RoomRepository roomRepository;
 
-    // 🔹 ADD RESIDENT
-    @PostMapping("/add")
-    public Resident addResident(@RequestBody Resident resident) {
-        return residentService.saveResident(resident);
-    }
-
-    // 🔹 GET ALL RESIDENTS
-    @GetMapping("/all")
+    // ✅ GET ALL RESIDENTS
+    @GetMapping
     public List<Resident> getAllResidents() {
-        return residentService.getAllResidents();
+        return residentRepository.findAll();
     }
 
-    // 🔹 GET RESIDENT BY ID (NEW)
-    @GetMapping("/{id}")
-    public Resident getResidentById(@PathVariable Long id) {
-        return residentService.getResidentById(id);
-    }
+    // ✅ ADD RESIDENT WITH ROOM
+    @PostMapping
+    public Resident addResident(@RequestBody Resident resident) {
 
-    // 🔹 DELETE RESIDENT (NEW)
-    @DeleteMapping("/delete/{id}")
-    public String deleteResident(@PathVariable Long id) {
-        residentService.deleteResident(id);
-        return "Resident deleted successfully";
+        // 🔥 Fetch room from DB
+        Long roomId = resident.getRoom().getRoomId();
+        Room room = roomRepository.findById(roomId).orElse(null);
+
+        resident.setRoom(room);
+
+        return residentRepository.save(resident);
     }
 }

@@ -1,52 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Signup</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Fees Data</title>
 </head>
+<body>
 
-<body class="d-flex justify-content-center align-items-center vh-100 bg-light">
+    <h2>Fees List</h2>
+    <div id="fees">Loading...</div>
 
-<div class="card p-4 shadow" style="width:350px;">
+    <script>
+        async function loadFees() {
+            try {
+                const response = await fetch("/fees"); // IMPORTANT CHANGE
+                const data = await response.json();
 
-    <h3 class="text-center">Signup</h3>
+                console.log("API DATA:", data);
 
-    <input id="name" class="form-control mb-2" placeholder="Name">
-    <input id="email" class="form-control mb-2" placeholder="Email">
-    <input id="password" type="password" class="form-control mb-2" placeholder="Password">
+                let output = "";
 
-    <select id="role" class="form-control mb-2">
-        <option>USER</option>
-        <option>ADMIN</option>
-    </select>
+                data.forEach(fee => {
+                    output += `
+                        <div style="margin-bottom:15px;">
+                            <b>Amount:</b> ${fee.amount} <br>
+                            <b>Status:</b> ${fee.status} <br>
+                        </div>
+                    `;
+                });
 
-    <button class="btn btn-success w-100" onclick="signup()">Signup</button>
+                document.getElementById("fees").innerHTML = output;
 
-</div>
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById("fees").innerHTML = "Error loading data";
+            }
+        }
 
-<script>
-
-function signup() {
-
-    let data = {
-        name: name.value,
-        email: email.value,
-        password: password.value,
-        role: role.value
-    };
-
-    fetch("http://localhost:8081/auth/signup", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify(data)
-    })
-    .then(() => {
-        alert("Signup successful!");
-        window.location.href = "login.html";
-    });
-}
-
-</script>
+        loadFees();
+    </script>
 
 </body>
 </html>
